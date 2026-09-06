@@ -2,7 +2,7 @@ from celery import shared_task
 import requests
 from django.conf import settings
 from .models import AutomationAuditLog, IncidentAlert
-from .ai_utils import analyze_awx_error  
+from .sre_agent import run_sre_agent_diagnosis  
 
 @shared_task
 def trigger_awx_job(incident_id, template_id):
@@ -13,6 +13,14 @@ def trigger_awx_job(incident_id, template_id):
 
     incident.status = 'RUNNING'
     incident.save()
+    
+    # Prepare incident context to give the Agent situational awareness
+    incident_data = {
+        "id": incident.id,
+        "title": getattr(incident, 'title', 'Unknown Alert'),
+        "severity": getattr(incident, 'severity', 'UNKNOWN'),
+        "template_id": template_id
+    }
 
     # 1. Normalize AWX Base Host
     host = settings.AWX_HOST.rstrip('/')
@@ -21,7 +29,7 @@ def trigger_awx_job(incident_id, template_id):
 
     url = f"{host}/api/v2/job_templates/{template_id}/launch/"
 
-    # 2. Sanitize Token (Removes embedded quotes, newlines, and spaces)
+    # 2. Sanitize Token
     token = str(getattr(settings, 'AWX_TOKEN', '')).strip().strip("'").strip('"')
 
     headers = {
@@ -55,9 +63,9 @@ def trigger_awx_job(incident_id, template_id):
             clean_error = response.text[:150].replace('\n', ' ').replace('\r', '')
             base_error = f"HTTP {response.status_code} | Target URL: {url} | Response: {clean_error}"
             
-            # ---> Trigger Gemini 3.5 AI Analysis on failure <---
-            ai_suggestion = analyze_awx_error(base_error)
-            log_detail = f"{base_error} | 🤖 Gemini 3.5: {ai_suggestion}"
+            # ---> Trigger Strands Agent SDK Analysis on API failure <---
+            ai_suggestion = run_sre_agent_diagnosis(incident_data, base_error)
+            log_detail = f"{base_error} | 🤖 Agentic AI: {ai_suggestion}"
             
             AutomationAuditLog.objects.create(
                 incident=incident, 
@@ -71,9 +79,9 @@ def trigger_awx_job(incident_id, template_id):
         incident.save()
         base_error = f"ERR | Target URL: {url} | Exception: {str(e)[:150]}"
         
-        # ---> Trigger Gemini 3.5 AI Analysis on exceptions <---
-        ai_suggestion = analyze_awx_error(base_error)
-        log_detail = f"{base_error} | 🤖 Gemini 3.5: {ai_suggestion}"
+        # ---> Trigger Strands Agent SDK Analysis on exceptions <---
+        ai_suggestion = run_sre_agent_diagnosis(incident_data, base_error)
+        log_detail = f"{base_error} | 🤖 Agentic AI: {ai_suggestion}"
         
         AutomationAuditLog.objects.create(
             incident=incident, 
