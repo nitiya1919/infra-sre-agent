@@ -1,4 +1,3 @@
-cat dashboard/templates/dashboard/index.html 
 {% extends 'dashboard/base.html' %}
 {% block content %}
 <div class="row align-items-center mb-4 g-3">
@@ -13,202 +12,284 @@ cat dashboard/templates/dashboard/index.html
     </div>
 </div>
 
-<div class="row g-3 mb-4">
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Total Incidents</div>
-                    <h3 class="fw-bold text-dark mb-0 mt-1">{{ total_count }}</h3>
-                </div>
-                <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-primary"><i class="bi bi-stack fs-4"></i></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Critical Pending Review</div>
-                    <h3 class="fw-bold text-danger mb-0 mt-1">{{ critical_count }}</h3>
-                </div>
-                <div class="rounded-3 bg-danger bg-opacity-10 p-3 text-danger"><i class="bi bi-exclamation-octagon fs-4"></i></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Resolved / Automated</div>
-                    <h3 class="fw-bold text-success mb-0 mt-1">{{ resolved_count }}</h3>
-                </div>
-                <div class="rounded-3 bg-success bg-opacity-10 p-3 text-success"><i class="bi bi-check-circle fs-4"></i></div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Navigation Tabs -->
+<ul class="nav nav-pills mb-4 gap-2" id="sreTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active fw-semibold rounded-pill px-4 shadow-xs" id="command-tab" data-bs-toggle="pill" data-bs-target="#command-pane" type="button" role="tab">
+            <i class="bi bi-cpu me-1"></i> Active Incidents
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link fw-semibold rounded-pill px-4 shadow-xs text-dark bg-white border border-light-subtle" id="activity-tab" data-bs-toggle="pill" data-bs-target="#activity-pane" type="button" role="tab">
+            <i class="bi bi-activity me-1"></i> Activity Audit Log
+        </button>
+    </li>
+</ul>
 
-<div class="row g-4">
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-            <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-shield-exclamation text-warning me-2"></i> Active SRE Incidents & Agent Analysis</h5>
-
-            {% for item in enriched_incidents %}
-                {% with incident=item.obj %}
-                <div class="card border border-light-subtle rounded-4 p-3 mb-3 bg-light bg-opacity-50 shadow-sm">
-                    <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+<div class="tab-content" id="sreTabContent">
+    <!-- TAB 1: COMMAND CENTER PANE -->
+    <div class="tab-pane fade show active" id="command-pane" role="tabpanel">
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary">
+                    <div class="d-flex justify-content-between align-items-center">
                         <div>
-                            <h6 class="fw-bold text-dark mb-1">{{ incident.title }}</h6>
-                            <div class="text-muted font-monospace d-flex align-items-center gap-2 flex-wrap" style="font-size: 11px;">
-                                <span>ID: #{{ incident.id }}</span>
-                                <span>•</span>
-                                <a href="{{ item.awx_template_url }}" target="_blank" class="text-decoration-none text-primary fw-bold">
-                                    <i class="bi bi-box-arrow-up-right me-1"></i>AWX Template #{{ incident.awx_template_id|default:"1" }}
-                                </a>
-                            </div>
+                            <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Total Incidents</div>
+                            <h3 class="fw-bold text-dark mb-0 mt-1">{{ total_count }}</h3>
                         </div>
-                        <div class="d-flex gap-1 align-items-center flex-wrap justify-content-end">
-                            {% if incident.severity == 'HIGH' or incident.severity == 'CRITICAL' %}
-                                <span class="badge bg-danger text-white fw-bold">HIGH</span>
-                            {% elif incident.severity == 'MEDIUM' %}
-                                <span class="badge bg-warning text-dark fw-bold">MEDIUM</span>
-                            {% else %}
-                                <span class="badge bg-secondary text-white fw-bold">LOW</span>
-                            {% endif %}
+                        <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-primary"><i class="bi bi-stack fs-4"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Critical Pending Review</div>
+                            <h3 class="fw-bold text-danger mb-0 mt-1">{{ critical_count }}</h3>
+                        </div>
+                        <div class="rounded-3 bg-danger bg-opacity-10 p-3 text-danger"><i class="bi bi-exclamation-octagon fs-4"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Resolved / Automated</div>
+                            <h3 class="fw-bold text-success mb-0 mt-1">{{ resolved_count }}</h3>
+                        </div>
+                        <div class="rounded-3 bg-success bg-opacity-10 p-3 text-success"><i class="bi bi-check-circle fs-4"></i></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-shield-exclamation text-warning me-2"></i> Active SRE Incidents & Agent Analysis</h5>
+
+                    {% for item in enriched_incidents %}
+                        {% with incident=item.obj %}
+                        <div class="card border border-light-subtle rounded-4 p-3 mb-3 bg-light bg-opacity-50 shadow-sm">
+                            <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">{{ incident.title }}</h6>
+                                    <div class="text-muted font-monospace d-flex align-items-center gap-2 flex-wrap" style="font-size: 11px;">
+                                        <span>ID: #{{ incident.id }}</span>
+                                        <span>•</span>
+                                        <a href="{{ item.awx_template_url }}" target="_blank" class="text-decoration-none text-primary fw-bold">
+                                            <i class="bi bi-box-arrow-up-right me-1"></i>AWX Template #{{ incident.awx_template_id|default:"1" }}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-1 align-items-center flex-wrap justify-content-end">
+                                    {% if incident.severity == 'HIGH' or incident.severity == 'CRITICAL' %}
+                                        <span class="badge bg-danger text-white fw-bold">HIGH</span>
+                                    {% elif incident.severity == 'MEDIUM' %}
+                                        <span class="badge bg-warning text-dark fw-bold">MEDIUM</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary text-white fw-bold">LOW</span>
+                                    {% endif %}
+                                    
+                                    <!-- Confidence Score Badge -->
+                                    <span class="badge bg-success bg-opacity-75 text-white fw-semibold" style="font-size: 10px;">
+                                        <i class="bi bi-shield-check me-1"></i>{{ item.confidence }}% Conf
+                                    </span>
+
+                                    {% if incident.status == 'PENDING' %}
+                                        <span class="badge bg-info text-dark fw-bold">Pending Approval</span>
+                                    {% elif incident.status == 'RUNNING' or incident.status == 'RUNning' %}
+                                        <span class="badge bg-primary text-white fw-bold">AWX Dispatched</span>
+                                    {% elif incident.status == 'FAILED' %}
+                                        <span class="badge bg-danger text-white fw-bold">Failed</span>
+                                    {% elif incident.status == 'TIMED_OUT' %}
+                                        <span class="badge bg-warning text-dark fw-bold">Timed Out</span>
+                                    {% else %}
+                                        <span class="badge bg-success text-white fw-bold">Resolved</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <p class="text-secondary small mb-3">{{ incident.description|default:"No description provided." }}</p>
                             
-                            {% if incident.status == 'PENDING' %}
-                                <span class="badge bg-info text-dark fw-bold">Pending Approval</span>
-                            {% elif incident.status == 'RUNNING' or incident.status == 'RUNning' %}
-                                <span class="badge bg-primary text-white fw-bold">AWX Dispatched</span>
-                            {% elif incident.status == 'FAILED' %}
-                                <span class="badge bg-danger text-white fw-bold">Failed</span>
-                            {% elif incident.status == 'TIMED_OUT' %}
-                                <span class="badge bg-warning text-dark fw-bold">Timed Out</span>
-                            {% else %}
-                                <span class="badge bg-success text-white fw-bold">Resolved</span>
+                            {% if incident.ai_analysis %}
+                                <div class="p-3 rounded-3 bg-white border-start border-4 border-success small mb-3 shadow-xs">
+                                    <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
+                                        <span class="fw-bold text-success d-flex align-items-center">
+                                            <i class="bi bi-robot me-1 fs-6"></i> Gemini Agent Root-Cause Analysis:
+                                        </span>
+                                        <span class="badge bg-success text-white fw-semibold" style="font-size: 10px;">
+                                            Gemini 1.5 Flash • {{ item.confidence }}% Confidence
+                                        </span>
+                                    </div>
+                                    <div class="text-secondary mb-2">{{ incident.ai_analysis }}</div>
+                                    <details class="mt-2 text-muted" style="font-size: 11px;">
+                                        <summary class="fw-semibold text-primary" style="cursor: pointer;">Inspect Payload & Sanitized Logs</summary>
+                                        <pre class="bg-light p-2 rounded mt-1 mb-0 font-monospace text-dark border" style="font-size: 10px;">{{ item.extra_vars_preview }}</pre>
+                                    </details>
+                                </div>
                             {% endif %}
-                        </div>
-                    </div>
 
-                    <p class="text-secondary small mb-3">{{ incident.description|default:"No description provided." }}</p>
-                    
-                    {% if incident.ai_analysis %}
-                        <div class="p-3 rounded-3 bg-white border-start border-4 border-success small mb-3 shadow-xs">
-                            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-1">
-                                <span class="fw-bold text-success d-flex align-items-center">
-                                    <i class="bi bi-robot me-1 fs-6"></i> Gemini Agent Root-Cause Analysis:
-                                </span>
-                                <span class="badge bg-success text-white fw-semibold" style="font-size: 10px;">
-                                    Gemini 1.5 Pro • {{ item.confidence }}% Confidence
-                                </span>
-                            </div>
-                            <div class="text-secondary mb-2">{{ incident.ai_analysis }}</div>
-                            <details class="mt-2 text-muted" style="font-size: 11px;">
-                                <summary class="fw-semibold text-primary" style="cursor: pointer;">Inspect Payload (`extra_vars` JSON)</summary>
-                                <pre class="bg-light p-2 rounded mt-1 mb-0 font-monospace text-dark border" style="font-size: 10px;">{{ item.extra_vars_preview }}</pre>
-                            </details>
-                        </div>
-                    {% endif %}
-
-                    <div class="mb-3">
-                        <details class="border border-secondary border-opacity-50 rounded-3 p-2 bg-white shadow-xs">
-                            <summary class="fw-bold text-dark d-flex align-items-center justify-content-between" style="cursor: pointer; font-size: 12px;">
-                                <span><i class="bi bi-terminal-fill text-danger me-1"></i> Server Error Logs & Traceback Inspector</span>
-                                <span class="badge bg-dark text-white" style="font-size: 9px;">Status: {{ incident.status }}</span>
-                            </summary>
-                            <div class="mt-2 p-3 bg-dark text-light rounded font-monospace border" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">
-{% if item.full_error %}{{ item.full_error }}
-{% else %}[INFO] No exception traceback recorded yet. Incident is currently in {{ incident.status }} state.
+                            <div class="mb-3">
+                                <details class="border border-secondary border-opacity-50 rounded-3 p-2 bg-white shadow-xs">
+                                    <summary class="fw-bold text-dark d-flex align-items-center justify-content-between" style="cursor: pointer; font-size: 12px;">
+                                        <span><i class="bi bi-terminal-fill text-danger me-1"></i> Server Error Logs & Traceback Inspector</span>
+                                        <span class="badge bg-dark text-white" style="font-size: 9px;">Status: {{ incident.status }}</span>
+                                    </summary>
+                                    <div class="mt-2 p-3 bg-dark text-light rounded font-monospace border" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">{% if item.full_error %}{{ item.full_error }}{% else %}[INFO] No exception traceback recorded yet. Incident is currently in {{ incident.status }} state.
 [DEBUG] AWX Endpoint target: {{ item.awx_template_url }}
-[TRACE] Ready for live payload transmission via Celery broker.
-{% endif %}</div>
-                        </details>
+[TRACE] Ready for live payload transmission via Celery broker.{% endif %}</div>
+                                </details>
+                            </div>
+
+                            <div class="mt-2 pt-2 border-top border-light d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                <div>
+                                    {% if incident.status == 'PENDING' %}
+                                        {% if incident.severity == 'HIGH' or incident.severity == 'CRITICAL' %}
+                                            <span class="text-danger small fw-semibold"><i class="bi bi-shield-lock-fill me-1"></i> Strict HITL Gate Required</span>
+                                        {% else %}
+                                            <span class="text-muted small">Standard Auto-Eligible</span>
+                                        {% endif %}
+                                    {% elif incident.status == 'RUNNING' or incident.status == 'RUNning' %}
+                                        <span class="text-primary small fw-semibold">
+                                            <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Executing playbook on AWX...
+                                        </span>
+                                    {% elif incident.status == 'FAILED' %}
+                                        <span class="text-danger small fw-semibold"><i class="bi bi-x-circle-fill me-1"></i> Execution halted. Check error log above.</span>
+                                    {% elif incident.status == 'TIMED_OUT' %}
+                                        <span class="text-warning small fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Connection timed out (>10s).</span>
+                                    {% else %}
+                                        <span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Remediation successful.</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    {% if incident.status == 'PENDING' %}
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                                            <button type="submit" class="btn btn-dark btn-sm fw-semibold shadow-sm px-3 rounded-pill">
+                                                <i class="bi bi-play-circle-fill text-success me-1"></i> Authorize & Trigger AWX
+                                            </button>
+                                        </form>
+                                    {% elif incident.status == 'FAILED' or incident.status == 'TIMED_OUT' %}
+                                        <form method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                                                <i class="bi bi-arrow-clockwise me-1"></i> Retry Remediation
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    <!-- Export Post-Mortem Button -->
+                                    <a href="{% url 'export_post_mortem' incident.id %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+                                        <i class="bi bi-file-earmark-text me-1"></i> Export Post-Mortem
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endwith %}
+                    {% empty %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-check-circle display-4 text-success mb-2 d-block"></i>
+                            <p class="mb-0">No active incidents recorded. All systems operational.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text text-primary me-2"></i> Audit Trail</h5>
+                        <span class="text-muted small">Latest 10</span>
                     </div>
+                    <div class="list-group list-group-flush">
+                        {% for log in audit_logs %}
+                            <div class="list-group-item px-0 py-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-dark text-truncate" style="max-width: 170px;" title="{{ log.incident.title }}">{{ log.incident.title }}</span>
+                                    <span class="badge bg-dark text-white font-monospace" style="font-size: 10px;">#{{ log.awx_job_id }}</span>
+                                </div>
+                                
+                                <div class="mt-2">
+                                    <span class="badge {% if 'SUCCESS' in log.status %}bg-success{% else %}bg-danger{% endif %} text-white text-break text-start d-block p-2" style="font-size: 10px; white-space: normal; word-break: break-all;">
+                                        {{ log.status }}
+                                    </span>
+                                </div>
 
-                    <div class="mt-2 pt-2 border-top border-light d-flex align-items-center justify-content-between flex-wrap gap-2">
-                        <div>
-                            {% if incident.status == 'PENDING' %}
-                                {% if incident.severity == 'HIGH' or incident.severity == 'CRITICAL' %}
-                                    <span class="text-danger small fw-semibold"><i class="bi bi-shield-lock-fill me-1"></i> Strict HITL Gate Required</span>
-                                {% else %}
-                                    <span class="text-muted small">Standard Auto-Eligible</span>
-                                {% endif %}
-                            {% elif incident.status == 'RUNNING' or incident.status == 'RUNning' %}
-                                <span class="text-primary small fw-semibold">
-                                    <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Executing playbook on AWX...
-                                </span>
-                            {% elif incident.status == 'FAILED' %}
-                                <span class="text-danger small fw-semibold"><i class="bi bi-x-circle-fill me-1"></i> Execution halted. Check error log above.</span>
-                            {% elif incident.status == 'TIMED_OUT' %}
-                                <span class="text-warning small fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Connection timed out (>10s).</span>
-                            {% else %}
-                                <span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Remediation successful.</span>
-                            {% endif %}
-                        </div>
-
-                        <div>
-                            {% if incident.status == 'PENDING' %}
-                                <form method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="incident_id" value="{{ incident.id }}">
-                                    <button type="submit" class="btn btn-dark btn-sm fw-semibold shadow-sm px-3 rounded-pill">
-                                        <i class="bi bi-play-circle-fill text-success me-1"></i> Authorize & Trigger AWX
-                                    </button>
-                                </form>
-                            {% elif incident.status == 'FAILED' or incident.status == 'TIMED_OUT' %}
-                                <form method="post" class="d-inline">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="incident_id" value="{{ incident.id }}">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
-                                        <i class="bi bi-arrow-clockwise me-1"></i> Retry Remediation
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </div>
+                                <div class="d-flex justify-content-end align-items-center mt-1">
+                                    <span class="text-muted" style="font-size: 10px;"><i class="bi bi-clock me-1"></i>{{ log.timestamp|date:"Y-m-d H:i" }}</span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-4 text-muted small">
+                                <i class="bi bi-clock-history fs-3 d-block mb-2 text-secondary opacity-50"></i>
+                                No automation jobs executed yet.
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
-                {% endwith %}
-            {% empty %}
-                <div class="text-center py-5 text-muted">
-                    <i class="bi bi-check-circle display-4 text-success mb-2 d-block"></i>
-                    <p class="mb-0">No active incidents recorded. All systems operational.</p>
-                </div>
-            {% endfor %}
+            </div>
         </div>
     </div>
 
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-journal-text text-primary me-2"></i> Audit Trail</h5>
-                <span class="text-muted small">Latest 10</span>
+    <!-- TAB 2: ACTIVITY AUDIT LOG PANE -->
+    <div class="tab-pane fade" id="activity-pane" role="tabpanel">
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h5 class="fw-bold text-dark mb-1"><i class="bi bi-activity text-primary me-2"></i> User & System Activity Ledger</h5>
+                    <p class="text-muted small mb-0">Complete historical timeline recording operator logins, authorizations, resource targeting, and source IPs.</p>
+                </div>
+                <span class="badge bg-dark text-white px-3 py-2 rounded-pill font-monospace" style="font-size: 11px;">
+                    Total Events Recorded: {{ activity_logs|length|default:"0" }}
+                </span>
             </div>
-            <div class="list-group list-group-flush">
-                {% for log in audit_logs %}
-                    <div class="list-group-item px-0 py-3 border-bottom">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <span class="fw-bold text-dark text-truncate" style="max-width: 170px;" title="{{ log.incident.title }}">{{ log.incident.title }}</span>
-                            <span class="badge bg-dark text-white font-monospace" style="font-size: 10px;">#{{ log.awx_job_id }}</span>
-                        </div>
-                        
-                        <!-- Fixed Status Wrap Container -->
-                        <div class="mt-2">
-                            <span class="badge {% if 'SUCCESS' in log.status %}bg-success{% else %}bg-danger{% endif %} text-white text-break text-start d-block p-2" style="font-size: 10px; white-space: normal; word-break: break-all;">
-                                {{ log.status }}
-                            </span>
-                        </div>
 
-                        <div class="d-flex justify-content-end align-items-center mt-1">
-                            <span class="text-muted" style="font-size: 10px;"><i class="bi bi-clock me-1"></i>{{ log.executed_at|date:"Y-m-d H:i" }}</span>
-                        </div>
-                    </div>
-                {% empty %}
-                    <div class="text-center py-4 text-muted small">
-                        <i class="bi bi-clock-history fs-3 d-block mb-2 text-secondary opacity-50"></i>
-                        No automation jobs executed yet.
-                    </div>
-                {% endfor %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+                    <thead class="table-light text-uppercase font-monospace" style="font-size: 11px;">
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Operator / User</th>
+                            <th>Action Performed</th>
+                            <th>Target Resource</th>
+                            <th>Source IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for act in activity_logs %}
+                            <tr>
+                                <td class="text-muted font-monospace" style="font-size: 12px;">
+                                    <i class="bi bi-clock me-1"></i>{{ act.timestamp|date:"Y-m-d H:i:s" }}
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-dark">
+                                        {% if act.user %}{{ act.user.username }}{% else %}<span class="text-muted fst-italic">System / Unauthenticated</span>{% endif %}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge {% if 'TRIGGER' in act.action %}bg-primary{% elif 'RETRY' in act.action %}bg-warning text-dark{% else %}bg-secondary{% endif %} fw-semibold">
+                                        {{ act.action }}
+                                    </span>
+                                </td>
+                                <td><span class="font-monospace text-primary fw-semibold">{{ act.resource }}</span></td>
+                                <td class="text-muted font-monospace" style="font-size: 12px;">{{ act.ip_address|default:"127.0.0.1" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="bi bi-shield-check display-5 text-secondary opacity-50 mb-2 d-block"></i>
+                                    <p class="mb-0">No operator activities logged yet.</p>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

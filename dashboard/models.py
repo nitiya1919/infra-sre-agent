@@ -1,4 +1,20 @@
 from django.db import models
+from django.contrib.auth.models import User
+
+class UserActivityLog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=100)  # e.g., "TRIGGER_AWX", "RETRY_JOB", "EXPORT_POST_MORTEM", "LOGIN"
+    resource = models.CharField(max_length=255) # e.g., "Incident #3 (AWX Template #1)"
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    details = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        username = self.user.username if self.user else "Anonymous/System"
+        return f"[{self.timestamp}] {username} - {self.action} on {self.resource}"
 
 class IncidentAlert(models.Model):
     title = models.CharField(max_length=200)
