@@ -1,3 +1,8 @@
+from django.shortcuts import render
+from django.db.models import Count, Q
+from django.utils import timezone
+from datetime import timedelta
+from .models import IncidentAlert
 import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -195,3 +200,71 @@ def incident_webhook(request):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
     return JsonResponse({'status': 'method not allowed'}, status=405)
+	
+
+def sre_analytics_dashboard(request):
+    # 1. Timeline filter parameter (default to 7 days)
+    try:
+        days_filter = int(request.GET.get('days', 7))
+    except ValueError:
+        days_filter = 7
+
+    since_date = timezone.now() - timedelta(days=days_filter)
+
+    # Base queryset with timeframe filter
+    if hasattr(IncidentAlert, 'created_at'):
+        incidents = IncidentAlert.objects.filter(created_at__gte=since_date)
+    else:
+        incidents = IncidentAlert.objects.all()
+
+    total_incidents = incidents.count()
+
+    # 2. Error Metrics (Unauthorized 401 & 404 Not Found)
+    unauthorized_count = incidents.filter(
+        Q(ai_analysis__icontains='401') | 
+        Q(ai_analysis__icontains='Unauthorized') | 
+        Q(description__icontains='401') | 
+        Q(description__icontains='Unauthorized')
+    ).count()
+    
+    not_found_count = incidents.filter(
+        Q(ai_analysis__icontains='404') | 
+        Q(ai_analysis__icontains='No JobTemplate') | 
+        Q(description__icontains='404') | 
+        Q(description__icontains='No JobTemplate')
+    ).count()
+
+    # 3. Success Rate Calculation
+    resolved_count = incidents.filter(status__iexact='RESOLVED').count()
+    success_rate = round((resolved_count / total_incidents * 100) if total_incidents > 0 else 0, 1)
+
+    # 4. Playbook / Template Success Rankings (Highest successful on top)
+    template_rankings = list(
+        incidents.filter(status__iexact='RESOLVED')
+        .values('awx_template_id')
+        .annotate(success_count=Count('id'))
+        .order_by('-success_count')
+    )
+    
+    # Calculate max success count for visual progress scaling
+    max_success = max([item['success_count'] for item in template_rankings], default=1)
+    for item in template_rankings:
+        item['percentage'] = int((item['success_count'] / max_success) * 100)
+
+    # 5. Other Incident Types & Resolution Breakdown
+    incident_summary = (
+        incidents.values('title', 'status')
+        .annotate(total=Count('id'))
+        .order_by('-total')
+    )
+
+    context = {
+        'days_filter': days_filter,
+        'total_incidents': total_incidents,
+        'success_rate': success_rate,
+        'unauthorized_count': unauthorized_count,
+        'not_found_count': not_found_count,
+        'template_rankings': template_rankings,
+        'incident_summary': incident_summary,
+    }
+    return render(request, 'dashboard/analytics.html', context)
