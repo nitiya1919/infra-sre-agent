@@ -1,7 +1,11 @@
 import re
 import os
+from dotenv import load_dotenv
+load_dotenv('/home/ubuntu/infra-sre-agent/creds.env')
 from django.conf import settings
 from strands import Agent, tool
+from strands.models.gemini import GeminiModel
+
 
 def sanitize_sensitive_data(raw_log: str) -> str:
     """Enforces strict enterprise-grade regex scrubbing of IPs, tokens, DB strings, and secrets before LLM ingestion."""
@@ -38,7 +42,7 @@ def search_internal_runbooks(error_keyword: str) -> str:
     knowledge_base = {
         "timeout": "Runbook 402: Check if Datadog agent is locking /var/log. Recommended Action: Restart telemetry daemon via Playbook #99.",
         "401": "Runbook 119: AWX Token expired or Execution Environment lacks IAM permissions. Recommended Action: Rotate service principal token.",
-        "404": "Runbook 089: AWX Template ID mismatch. Recommended Action: Re-sync webhook payload route configurations.",
+        "404": "Runbook 089: AWX Template ID mismatch. Recommended Action: Re-sync webhook payload route configurations or update Job Template ID.",
         "403": "Runbook 092: RBAC permissions insufficient for AWX execution. Recommended Action: Elevate service account role.",
         "unreachable": "Runbook 901: Automation controller offline or terminated. Recommended Action: Switch routing to regional standby controller via Playbook #101."
     }
@@ -75,29 +79,33 @@ def run_sre_agent_diagnosis(incident_data: dict, raw_stack_trace: str) -> dict:
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key or not api_key.strip():
         return {
-            "analysis": "Strands Agent Error: GEMINI_API_KEY is missing from environment.",
+            "analysis": "Strands Agent Error: GEMINI_API_KEY / GOOGLE_API_KEY is missing from environment.",
             "confidence": 0,
             "sanitized_log": sanitized_log
         }
         
-    os.environ["GEMINI_API_KEY"] = api_key.strip()
-        
-    # 3. Instantiate the Agent with Advisory Prompts
-    agent = Agent(
-        model="gemini/gemini-1.5-flash",
-        tools=[search_internal_runbooks, recommend_remediation_action],
-        system_prompt=(
-            "You are an expert SRE Advisory Agent. When an incident occurs:\n"
-            "1. Analyze the sanitized error log to find root causes.\n"
-            "2. ALWAYS call `search_internal_runbooks` to check historical post-mortems.\n"
-            "3. Formulate a safe, actionable recommendation and invoke `recommend_remediation_action` with a specific playbook ID.\n"
-            "4. Provide a clear, concise summary for the audit log explaining the diagnosis, and explicitly state a Confidence Score percentage (e.g., Confidence: 95%)."
-        )
-    )
-    
-    prompt = f"Incident Context: {incident_data}\nSanitized Log: {sanitized_log}"
-    
+    clean_key = api_key.strip()
+  
+    # 3. Instantiate native Gemini Model for Strands SDK
     try:
+        model = GeminiModel(
+            model_id="gemini-3.6-flash",
+            client_args={"api_key": clean_key}
+        )
+        
+        agent = Agent(
+            model=model,
+            tools=[search_internal_runbooks, recommend_remediation_action],
+            system_prompt=(
+                "You are an expert SRE Advisory Agent. When an incident occurs:\n"
+                "1. Analyze the sanitized error log to find root causes.\n"
+                "2. ALWAYS call `search_internal_runbooks` to check historical post-mortems.\n"
+                "3. Formulate a safe, actionable recommendation and invoke `recommend_remediation_action` with a specific playbook ID.\n"
+                "4. Provide a clear, concise summary for the audit log explaining the diagnosis, and explicitly state a Confidence Score percentage (e.g., Confidence: 95%)."
+            )
+        )
+        
+        prompt = f"Incident Context: {incident_data}\nSanitized Log: {sanitized_log}"
         response = agent(prompt)
         text_response = str(response.text if hasattr(response, 'text') else (response.content if hasattr(response, 'content') else response))
         

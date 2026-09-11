@@ -162,18 +162,35 @@ def incident_webhook(request):
             data = json.loads(request.body)
             raw_template_id = data.get('awx_template_id') or data.get('template_id', 7)
             template_id = int(raw_template_id)
+            severity = data.get('severity', 'MEDIUM').upper()
+            
+            # Auto-run LOW severity; keep MEDIUM/HIGH/CRITICAL as PENDING for HITL approval
+            initial_status = 'RUNNING' if severity == 'LOW' else data.get('status', 'PENDING')
+
             incident = IncidentAlert.objects.create(
                 title=data.get('title', 'External Alert'),
                 description=data.get('description', ''),
-                severity=data.get('severity', 'MEDIUM'),
-                status=data.get('status', 'PENDING'),
+                severity=severity,
+                status=initial_status,
                 awx_template_id=template_id,
                 ai_analysis=data.get('ai_analysis', '')
             )
+
+            # Instantly dispatch AWX job for auto-eligible (LOW severity) incidents
+            if severity == 'LOW':
+                trigger_awx_job.delay(incident.id, incident.awx_template_id)
+                log_user_activity(
+                    request,
+                    action="AUTO_DISPATCH_AWX",
+                    resource=f"Incident #{incident.id} ({incident.title})",
+                    details="Auto-executed due to LOW severity policy."
+                )
+
             return JsonResponse({
                 'status': 'success', 
                 'incident_id': incident.id, 
-                'awx_template_id': incident.awx_template_id
+                'awx_template_id': incident.awx_template_id,
+                'executed_automatically': (severity == 'LOW')
             }, status=201)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
