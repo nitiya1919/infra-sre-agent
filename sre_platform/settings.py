@@ -63,4 +63,6 @@ LOGOUT_REDIRECT_URL = '/login/'
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 AWX_HOST = os.getenv('AWX_HOST')
 AWX_TOKEN = os.getenv('AWX_TOKEN')
+AWX_USERNAME = os.getenv('AWX_USERNAME')
+AWX_PASSWORD= os.getenv('AWX_PASSWORD')
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')

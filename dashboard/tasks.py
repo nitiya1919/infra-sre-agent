@@ -108,7 +108,7 @@ def trigger_awx_job(incident_id, template_id):
             job_url = f"{host}/api/v2/jobs/{job_id}/"
             job_status = "running"
             
-            for _ in range(30):  # Poll up to 60 seconds (30 * 2s)
+            for _ in range(300):  # Poll up to 60 seconds (30 * 2s)
                 time.sleep(2)
                 poll_resp = requests.get(job_url, headers=headers, timeout=5)
                 if poll_resp.status_code == 200:

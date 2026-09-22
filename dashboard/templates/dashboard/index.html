@@ -8,7 +8,7 @@
         <p class="text-muted small mb-0">Autonomous agentic intelligence coupled with Ansible AWX execution.</p>
     </div>
     <div class="col-12 col-lg-5 d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
-        <!-- Analytics Dashboard Button (Clean dark pill matching light theme) -->
+        <!-- Analytics Dashboard Button -->
         <a href="{% url 'sre_analytics' %}" class="btn btn-dark btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2 shadow-sm text-white">
             <i class="bi bi-bar-chart-fill text-primary"></i> Analytics Dashboard
         </a>
@@ -37,46 +37,67 @@
 <div class="tab-content" id="sreTabContent">
     <!-- TAB 1: COMMAND CENTER PANE -->
     <div class="tab-pane fade show active" id="command-pane" role="tabpanel">
+        <!-- Clickable Summary Metric Cards -->
         <div class="row g-3 mb-4">
+            <!-- Card 1: Total Incidents -->
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Total Incidents</div>
-                            <h3 class="fw-bold text-dark mb-0 mt-1">{{ total_count }}</h3>
+                <a href="?filter=all" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-primary" style="transition: transform 0.2s; {% if current_filter == 'all' or not current_filter %}outline: 2px solid #0d6efd;{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Total Incidents</div>
+                                <h3 class="fw-bold text-dark mb-0 mt-1">{{ total_count }}</h3>
+                            </div>
+                            <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-primary"><i class="bi bi-stack fs-4"></i></div>
                         </div>
-                        <div class="rounded-3 bg-primary bg-opacity-10 p-3 text-primary"><i class="bi bi-stack fs-4"></i></div>
                     </div>
-                </div>
+                </a>
             </div>
+
+            <!-- Card 2: Critical Pending Review -->
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Critical Pending Review</div>
-                            <h3 class="fw-bold text-danger mb-0 mt-1">{{ critical_count }}</h3>
+                <a href="?filter=critical" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-danger" style="transition: transform 0.2s; {% if current_filter == 'critical' %}outline: 2px solid #dc3545;{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Critical Pending Review</div>
+                                <h3 class="fw-bold text-danger mb-0 mt-1">{{ critical_count }}</h3>
+                            </div>
+                            <div class="rounded-3 bg-danger bg-opacity-10 p-3 text-danger"><i class="bi bi-exclamation-octagon fs-4"></i></div>
                         </div>
-                        <div class="rounded-3 bg-danger bg-opacity-10 p-3 text-danger"><i class="bi bi-exclamation-octagon fs-4"></i></div>
                     </div>
-                </div>
+                </a>
             </div>
+
+            <!-- Card 3: Resolved / Automated -->
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Resolved / Automated</div>
-                            <h3 class="fw-bold text-success mb-0 mt-1">{{ resolved_count }}</h3>
+                <a href="?filter=resolved" class="text-decoration-none">
+                    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white border-start border-4 border-success" style="transition: transform 0.2s; {% if current_filter == 'resolved' %}outline: 2px solid #198754;{% endif %}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-uppercase text-muted fw-bold" style="font-size: 11px;">Resolved / Automated</div>
+                                <h3 class="fw-bold text-success mb-0 mt-1">{{ resolved_count }}</h3>
+                            </div>
+                            <div class="rounded-3 bg-success bg-opacity-10 p-3 text-success"><i class="bi bi-check-circle fs-4"></i></div>
                         </div>
-                        <div class="rounded-3 bg-success bg-opacity-10 p-3 text-success"><i class="bi bi-check-circle fs-4"></i></div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
 
         <div class="row g-4">
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                    <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-shield-exclamation text-warning me-2"></i> Active SRE Incidents & Agent Analysis</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="fw-bold mb-0 text-dark">
+                            <i class="bi bi-shield-exclamation text-warning me-2"></i> Active SRE Incidents & Agent Analysis
+                        </h5>
+                        {% if current_filter and current_filter != 'all' %}
+                            <span class="badge bg-dark text-white px-3 py-2 rounded-pill font-monospace" style="font-size: 11px;">
+                                Filter: {{ current_filter|title }} <a href="?filter=all" class="text-light ms-2 text-decoration-none fw-bold">✕ Reset</a>
+                            </span>
+                        {% endif %}
+                    </div>
 
                     {% for item in enriched_incidents %}
                         {% with incident=item.obj %}
@@ -101,26 +122,36 @@
                                         <span class="badge bg-secondary text-white fw-bold">LOW</span>
                                     {% endif %}
                                     
-                                    <!-- Confidence Score Badge -->
-                                    <span class="badge bg-success bg-opacity-75 text-white fw-semibold" style="font-size: 10px;">
+                                    <!-- Dynamic Confidence Score Badge -->
+                                    <span class="badge {% if item.confidence >= 85 %}bg-success{% elif item.confidence >= 60 %}bg-warning text-dark{% else %}bg-danger{% endif %} bg-opacity-75 text-white fw-semibold" style="font-size: 10px;" title="Model Confidence Score based on historical logs">
                                         <i class="bi bi-shield-check me-1"></i>{{ item.confidence }}% Conf
                                     </span>
 
+                                    <!-- Granular Status Badges -->
                                     {% if incident.status == 'PENDING' %}
                                         <span class="badge bg-info text-dark fw-bold">Pending Approval</span>
+                                    {% elif incident.status == 'CONNECTING' %}
+                                        <span class="badge bg-primary text-white fw-bold"><span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span>Connecting...</span>
+                                    {% elif incident.status == 'QUEUED' %}
+                                        <span class="badge bg-primary text-white fw-bold"><span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span>Pending in AWX</span>
                                     {% elif incident.status == 'RUNNING' or incident.status == 'RUNning' %}
-                                        <span class="badge bg-primary text-white fw-bold">AWX Dispatched</span>
+                                        <span class="badge bg-primary text-white fw-bold"><span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span>Running</span>
                                     {% elif incident.status == 'FAILED' %}
                                         <span class="badge bg-danger text-white fw-bold">Failed</span>
                                     {% elif incident.status == 'TIMED_OUT' %}
                                         <span class="badge bg-warning text-dark fw-bold">Timed Out</span>
+                                    {% elif incident.status == 'CANCELLED' %}
+                                        <span class="badge bg-secondary text-white fw-bold">Aborted</span>
                                     {% else %}
-                                        <span class="badge bg-success text-white fw-bold">Resolved</span>
+                                        <span class="badge bg-success text-white fw-bold">Success</span>
                                     {% endif %}
                                 </div>
                             </div>
 
-                            <p class="text-secondary small mb-3">{{ incident.description|default:"No description provided." }}</p>
+                            <!-- Scrollable Incoming Payload -->
+                            <div class="p-3 bg-white text-secondary rounded-3 font-monospace border border-light-subtle shadow-xs mb-3" style="font-size: 11px; max-height: 150px; overflow-y: auto; overflow-x: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.4;">
+                                {{ incident.description|default:"No description provided." }}
+                            </div>
                             
                             {% if incident.ai_analysis %}
                                 <div class="p-3 rounded-3 bg-white border-start border-4 border-success small mb-3 shadow-xs">
@@ -146,9 +177,9 @@
                                         <span><i class="bi bi-terminal-fill text-danger me-1"></i> Server Error Logs & Traceback Inspector</span>
                                         <span class="badge bg-dark text-white" style="font-size: 9px;">Status: {{ incident.status }}</span>
                                     </summary>
-                                    <div class="mt-2 p-3 bg-dark text-light rounded font-monospace border" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">{% if item.full_error %}{{ item.full_error }}{% else %}[INFO] No exception traceback recorded yet. Incident is currently in {{ incident.status }} state.
+                                    <div class="mt-2 p-3 bg-dark text-light rounded font-monospace border" style="font-size: 11px; white-space: pre-wrap; word-break: break-all;">{% if item.full_error %}{{ item.full_error }}{% else %}[INFO] Job state: {{ incident.status }}. Monitoring telemetry stream...
 [DEBUG] AWX Endpoint target: {{ item.awx_template_url }}
-[TRACE] Ready for live payload transmission via Celery broker.{% endif %}</div>
+[TRACE] Active worker task handed off to Celery broker queue.{% endif %}</div>
                                 </details>
                             </div>
 
@@ -160,29 +191,54 @@
                                         {% else %}
                                             <span class="text-muted small">Standard Auto-Eligible</span>
                                         {% endif %}
+                                    {% elif incident.status == 'CONNECTING' %}
+                                        <span class="text-primary small fw-semibold">
+                                            <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Waiting for connection (connecting...)
+                                        </span>
+                                    {% elif incident.status == 'QUEUED' %}
+                                        <span class="text-primary small fw-semibold">
+                                            <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Pending in AWX execution queue...
+                                        </span>
                                     {% elif incident.status == 'RUNNING' or incident.status == 'RUNning' %}
                                         <span class="text-primary small fw-semibold">
-                                            <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Executing playbook on AWX...
+                                            <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span> Running playbook tasks on target hosts...
                                         </span>
                                     {% elif incident.status == 'FAILED' %}
                                         <span class="text-danger small fw-semibold"><i class="bi bi-x-circle-fill me-1"></i> Execution halted. Check error log above.</span>
                                     {% elif incident.status == 'TIMED_OUT' %}
                                         <span class="text-warning small fw-semibold"><i class="bi bi-exclamation-triangle-fill me-1"></i> Connection timed out (>10s).</span>
+                                    {% elif incident.status == 'CANCELLED' %}
+                                        <span class="text-secondary small fw-semibold"><i class="bi bi-stop-circle-fill me-1"></i> Execution aborted by operator.</span>
                                     {% else %}
-                                        <span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Remediation successful.</span>
+                                        <span class="text-success small fw-semibold"><i class="bi bi-check-circle-fill me-1"></i> Success - Remediation completed.</span>
                                     {% endif %}
                                 </div>
 
                                 <div class="d-flex gap-2">
                                     {% if incident.status == 'PENDING' %}
+                                        {% if user.is_staff or user.is_superuser %}
+                                            <form method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="incident_id" value="{{ incident.id }}">
+                                                <button type="submit" class="btn btn-dark btn-sm fw-semibold shadow-sm px-3 rounded-pill">
+                                                    <i class="bi bi-play-circle-fill text-success me-1"></i> Authorize & Trigger AWX
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <button type="button" class="btn btn-secondary btn-sm fw-semibold shadow-sm px-3 rounded-pill opacity-75" disabled title="SRE Admin privileges required to authorize playbook execution.">
+                                                <i class="bi bi-lock-fill me-1"></i> Authorization Restricted
+                                            </button>
+                                        {% endif %}
+                                    {% elif incident.status == 'CONNECTING' or incident.status == 'QUEUED' or incident.status == 'RUNNING' or incident.status == 'RUNning' %}
                                         <form method="post" class="d-inline">
                                             {% csrf_token %}
                                             <input type="hidden" name="incident_id" value="{{ incident.id }}">
-                                            <button type="submit" class="btn btn-dark btn-sm fw-semibold shadow-sm px-3 rounded-pill">
-                                                <i class="bi bi-play-circle-fill text-success me-1"></i> Authorize & Trigger AWX
+                                            <input type="hidden" name="action" value="cancel_job">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-semibold">
+                                                <i class="bi bi-stop-circle-fill me-1"></i> Abort AWX Job
                                             </button>
                                         </form>
-                                    {% elif incident.status == 'FAILED' or incident.status == 'TIMED_OUT' %}
+                                    {% elif incident.status == 'FAILED' or incident.status == 'TIMED_OUT' or incident.status == 'CANCELLED' %}
                                         <form method="post" class="d-inline">
                                             {% csrf_token %}
                                             <input type="hidden" name="incident_id" value="{{ incident.id }}">
@@ -203,7 +259,7 @@
                     {% empty %}
                         <div class="text-center py-5 text-muted">
                             <i class="bi bi-check-circle display-4 text-success mb-2 d-block"></i>
-                            <p class="mb-0">No active incidents recorded. All systems operational.</p>
+                            <p class="mb-0">No active incidents recorded for this filter criteria.</p>
                         </div>
                     {% endfor %}
                 </div>
@@ -224,9 +280,9 @@
                                 </div>
                                 
                                 <div class="mt-2">
-                                    <span class="badge {% if 'SUCCESS' in log.status %}bg-success{% else %}bg-danger{% endif %} text-white text-break text-start d-block p-2" style="font-size: 10px; white-space: normal; word-break: break-all;">
+                                    <div class="p-2 {% if 'SUCCESS' in log.status %}bg-success text-white{% else %}bg-danger text-white{% endif %} rounded font-monospace shadow-xs" style="font-size: 10px; max-height: 140px; overflow-y: auto; overflow-x: auto; white-space: pre-wrap; word-break: break-all; line-height: 1.3;">
                                         {{ log.status }}
-                                    </span>
+                                    </div>
                                 </div>
 
                                 <div class="d-flex justify-content-end align-items-center mt-1">
@@ -302,10 +358,24 @@
         </div>
     </div>
 </div>
+
 <script>
-    // Auto-refresh the page every 15 seconds to sync AWX job states
-    setInterval(function() {
-        window.location.reload();
+    // Seamless AJAX Polling every 15 seconds to sync AWX job states without full-page reloads
+    setInterval(async function() {
+        try {
+            const response = await fetch(window.location.href, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            if (response.ok) {
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.getElementById('sreTabContent');
+                if (newContent) {
+                    document.getElementById('sreTabContent').innerHTML = newContent.innerHTML;
+                }
+            }
+        } catch (err) {
+            console.warn('Background status sync skipped due to network fluctuation.');
+        }
     }, 15000);
 </script>
 {% endblock %}
